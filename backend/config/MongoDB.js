@@ -5,7 +5,13 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URL, {
+    const uri = process.env.MONGODB_URL;
+    if (!uri) {
+      console.error('Error: MONGODB_URL is not defined in environment. Create a .env file with MONGODB_URL.');
+      return;
+    }
+
+    const conn = await mongoose.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

@@ -1,5 +1,8 @@
 const User = require("../../models/user.model");
 const bcrypt = require("bcrypt");
+const generatePassword = require("../../utlis/generatePassword");
+const sendMail = require("../../config/Nodemailer");
+const emailTemplate = require("../../utlis/emailTemplates");
 
 // get management user
 const managementUsers = async (req, res) => {
@@ -8,16 +11,32 @@ const managementUsers = async (req, res) => {
 }
 
 const managementAddUsers = async (req, res) => {
-  const email = req.body.email;
+  const { email, first_name, number, password: suppliedPassword } = req.body;
 
   try {
     if (await User.findOne({ email }))
       return res.json({ msg: "User Already Exists!" });
 
-    const hashPassword = await bcrypt.hash(req.body.password, 10);
+    const password = suppliedPassword && suppliedPassword.trim().length > 0
+      ? suppliedPassword
+      : generatePassword();
 
-    const newUser = new User({ first_name: req.body.first_name, email: req.body.email, number: req.body.number, password: hashPassword, role: "management_admin" });
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({ first_name, email, number, password: hashPassword, role: "management_admin" });
     await newUser.save();
+
+    if (!suppliedPassword || suppliedPassword.trim().length === 0) {
+      const html = emailTemplate({
+        role: "Management",
+        name: first_name,
+        email,
+        password
+      });
+      const subject = "Welcome to CPMS | Your Login Credentials as a Management";
+      await sendMail(email, subject, html);
+    }
+
     return res.json({ msg: "User Created!" });
   } catch (error) {
     console.log("admin.user-management => ", error);

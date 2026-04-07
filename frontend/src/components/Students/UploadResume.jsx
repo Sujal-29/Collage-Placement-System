@@ -61,7 +61,12 @@ const UploadResume = ({ fetchCurrentUserData }) => {
       setUploadStatus('Resume uploaded successfully');
     } catch (error) {
       console.error('Error uploading the resume', error);
-      setUploadStatus('Error uploading the resume');
+      // display backend message if available
+      if (error.response && error.response.data && error.response.data.msg) {
+        setUploadStatus(error.response.data.msg);
+      } else {
+        setUploadStatus('Error uploading the resume');
+      }
     }
   };
 
@@ -71,8 +76,8 @@ const UploadResume = ({ fetchCurrentUserData }) => {
       <FloatingLabel controlId="floatingResume" label="Update Resume">
         <Form.Control
           type="file"
-          accept='.pdf, .doc, .docx'
-          placeholder="Upload Resume"
+          accept='.pdf'  // only PDF allowed now
+          placeholder="Upload Resume (PDF only)"
           name='resume'
           onChange={handleSubmit}
         />

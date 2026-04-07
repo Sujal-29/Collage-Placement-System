@@ -5,27 +5,32 @@ const emailTemplate = require("../../utlis/emailTemplates");
 const generatePassword = require('../../utlis/generatePassword');
 
 const AddTPO = async (req, res) => {
-  const { email, first_name, number } = req.body;
+  const { email, first_name, number, password: suppliedPassword } = req.body;
 
   try {
     if (await Users.findOne({ email }))
       return res.json({ msg: "User Already Exists!" });
 
-    const password = generatePassword();
+    // if admin provided a password use it, otherwise generate one and email later
+    const password = suppliedPassword && suppliedPassword.trim().length > 0
+      ? suppliedPassword
+      : generatePassword();
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    Users.create({ first_name, email, number, password: hashPassword, role: "tpo_admin" });
+    await Users.create({ first_name, email, number, password: hashPassword, role: "tpo_admin" });
 
-    const html = emailTemplate({
-      role: "TPO",
-      name: first_name,
-      email: email,
-      password: password
-    });
-    const subject = "Welcome to CPMS | Your Login Credentials as a TPO";
+    if (!suppliedPassword || suppliedPassword.trim().length === 0) {
+      const html = emailTemplate({
+        role: "TPO",
+        name: first_name,
+        email: email,
+        password: password
+      });
+      const subject = "Welcome to CPMS | Your Login Credentials as a TPO";
 
-    await sendMail(email, subject, html);
+      await sendMail(email, subject, html);
+    }
 
     return res.json({ msg: "User Created!" });
   } catch (error) {
@@ -35,27 +40,31 @@ const AddTPO = async (req, res) => {
 }
 
 const AddManagement = async (req, res) => {
-  const { email, first_name, number } = req.body;
+  const { email, first_name, number, password: suppliedPassword } = req.body;
 
   try {
     if (await Users.findOne({ email }))
       return res.json({ msg: "User Already Exists!" });
 
-    const password = generatePassword();
+    const password = suppliedPassword && suppliedPassword.trim().length > 0
+      ? suppliedPassword
+      : generatePassword();
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    Users.create({ first_name, email, number, password: hashPassword, role: "management_admin" });
+    await Users.create({ first_name, email, number, password: hashPassword, role: "management_admin" });
 
-    const html = emailTemplate({
-      role: "Management",
-      name: first_name,
-      email: email,
-      password: password
-    });
-    const subject = "Welcome to CPMS | Your Login Credentials as a Management";
+    if (!suppliedPassword || suppliedPassword.trim().length === 0) {
+      const html = emailTemplate({
+        role: "Management",
+        name: first_name,
+        email: email,
+        password: password
+      });
+      const subject = "Welcome to CPMS | Your Login Credentials as a Management";
 
-    await sendMail(email, subject, html);
+      await sendMail(email, subject, html);
+    }
     return res.json({ msg: "User Created!" });
   } catch (error) {
     console.log("management-user-add-management => ", error);
@@ -74,7 +83,7 @@ const AddStudent = async (req, res) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    Users.create({ first_name, email, number, password: hashPassword, role: "student", "studentProfile.isApproved": true });
+    await Users.create({ first_name, email, number, password: hashPassword, role: "student", "studentProfile.isApproved": true });
 
     const html = emailTemplate({
       role: "Student",

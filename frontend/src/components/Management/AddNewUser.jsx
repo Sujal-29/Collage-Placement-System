@@ -18,7 +18,8 @@ function AddNewUser() {
   const [data, setData] = useState({
     first_name: "",
     email: "",
-    number: ""
+    number: "",
+    password: "" // optional, leave blank for random generation
   });
 
   // for error message
@@ -33,7 +34,14 @@ function AddNewUser() {
 
   const closeModal = () => setShowModal(false);
 
-  const handleDataChange = (e) => setData({ ...data, [e.target.name]: e.target.value });
+  const handleDataChange = (e) => {
+    const { name, value } = e.target;
+    setData({ ...data, [name]: value });
+    if (name === 'password') {
+      if (value && value.length < 6) setError({ ...error, password: 'Password should be at least 6 characters' });
+      else setError({ ...error, password: '' });
+    }
+  };
 
   const handleModalSubmit = (e) => {
     e.preventDefault();
@@ -43,6 +51,8 @@ function AddNewUser() {
     if (!data?.first_name) newError.first_name = 'Name Required!';
     if (!data?.email) newError.email = 'Email Required!';
     if (!data?.number) newError.number = 'Number Required!';
+    // password is optional; if provided ensure basic length
+    if (data?.password && data.password.length < 6) newError.password = 'Password should be at least 6 characters';
 
     // If any errors were found, set them and return early to prevent the modal from opening
     if (Object.keys(newError).length > 0) return setError(newError);
@@ -67,7 +77,8 @@ function AddNewUser() {
         setData({
           first_name: "",
           email: "",
-          number: ""
+          number: "",
+          password: ""
         });
       }
     } catch (error) {
@@ -93,7 +104,8 @@ function AddNewUser() {
         setData({
           first_name: "",
           email: "",
-          number: ""
+          number: "",
+          password: ""
         });
       }
     } catch (error) {
@@ -119,7 +131,8 @@ function AddNewUser() {
         setData({
           first_name: "",
           email: "",
-          number: ""
+          number: "",
+          password: ""
         });
       }
     } catch (error) {
@@ -200,10 +213,27 @@ function AddNewUser() {
                   </FloatingLabel>
                   <span className='text-red-500'>{error?.number}</span>
                 </div>
+                <div className="">
+                  <FloatingLabel label={
+                    <>
+                      <span>Password <span className='text-gray-500'>(optional)</span></span>
+                    </>
+                  }>
+                    <Form.Control
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Password (leave blank to auto-generate)"
+                      name='password'
+                      value={data.password || ''}
+                      onChange={handleDataChange}
+                    />
+                  </FloatingLabel>
+                  <span className='text-red-500'>{error?.password}</span>
+                </div>
               </div>
               <p className='text-wrap'>
                 <span className="text-red-500">Note: </span>
-                Password will be randomly generated & send to user via mail.
+                You can enter a password manually or leave the field blank to have the system generate one and email it to the user.
               </p>
             </div>
             <button type="submit" className="my-1 flex items-center px-3 py-2 bg-blue-500 text-white rounded">

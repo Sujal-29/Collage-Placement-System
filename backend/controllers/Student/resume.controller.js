@@ -4,13 +4,24 @@ const path = require("path");
 
 const UploadResume = async (req, res) => {
   try {
+    console.log('resume upload payload', req.file);
+    console.log('resume upload body', req.body);
     if (!req.file) {
       return res.status(400).json({ msg: "No resume uploaded" });
+    }
+    if (!req.file.path) {
+      console.error('uploaded file has no path:', req.file);
+      return res.status(500).json({ msg: 'Server error: file path missing' });
     }
 
     // Check for PDF MIME type
     if (req.file.mimetype !== "application/pdf") {
       return res.status(400).json({ msg: "Only PDF files are allowed" });
+    }
+
+    if (!req.body.userId) {
+      console.error('resume upload missing userId in body', req.body);
+      return res.status(400).json({ msg: "userId required" });
     }
 
     const user = await User.findById(req.body.userId);
@@ -43,8 +54,9 @@ const UploadResume = async (req, res) => {
 
     return res.status(200).json({ msg: "Resume uploaded successfully!", url: cloudinaryResponse.secure_url });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ msg: "Server error", error });
+    console.error('resume upload error:', error);
+    if (error.stack) console.error(error.stack);
+    return res.status(500).json({ msg: "Server error", error: error.message || String(error) });
   }
 };
 

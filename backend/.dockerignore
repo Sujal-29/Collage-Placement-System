@@ -10,12 +10,7 @@ pnpm-lock.yaml
 README.md
 .DS_Store
 *.log
-coverage
-.vscode
-.idea
-*.md
-test
-tests
+sts
 __tests__
 
 # frontend/.dockerignore
