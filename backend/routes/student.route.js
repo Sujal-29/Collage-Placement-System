@@ -13,7 +13,7 @@ const Signup = require('../controllers/Student/signup.controller.js');
 // student login controller
 const Login = require('../controllers/Student/login.controller.js');
 
-const UploadResume = require('../controllers/Student/resume.controller.js');
+const { UploadResume, DeleteResume } = require('../controllers/Student/resume.controller.js');
 const { UploadOfferLetter, DeleteOfferLetter } = require('../controllers/Student/offer-letter.controller.js');
 
 const { AppliedToJob, CheckAlreadyApplied } = require('../controllers/Student/apply-job.controller.js');
@@ -33,6 +33,7 @@ router.post('/login', Login);
 
 // Route to upload resume
 router.post('/upload-resume', upload.single('resume'), UploadResume);
+router.post('/delete-resume', authenticateToken, DeleteResume);
 
 // Route to upload offer letter
 router.post('/upload-offer-letter', upload.single('offerLetter'), UploadOfferLetter);

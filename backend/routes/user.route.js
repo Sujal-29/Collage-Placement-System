@@ -12,6 +12,7 @@ const authenticateToken = require('../middleware/auth.middleware');
 const UserDetail = require('../controllers/user/user.detail.controller.js');
 const AllUsersLen = require('../controllers/user/user.all-users.controller.js');
 const UpdatePhoto = require('../controllers/user/user.update-photo.controller.js');
+const DeletePhoto = require('../controllers/user/user.delete-photo.controller.js');
 const UpdateProfile = require('../controllers/user/user.update-profile.controller.js');
 const UpdatePassword = require('../controllers/user/user.update-password.js');
 const UserData = require('../controllers/user/user.show-data.js');
@@ -25,6 +26,8 @@ router.get('/all-users', authenticateToken, AllUsersLen);
 router.get('/:userId', authenticateToken, UserData);
 
 router.post('/upload-photo', upload.single('profileImgs'), UpdatePhoto);
+
+router.post('/delete-photo', DeletePhoto);
 
 router.post('/update-profile', authenticateToken, UpdateProfile);
 

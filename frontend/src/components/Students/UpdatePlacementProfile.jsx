@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import Button from 'react-bootstrap/Button';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
@@ -44,8 +44,48 @@ function UpdatePlacementProfile() {
 
   useEffect(() => {
     fetchCurrentUserData();
-    calcCGPA();
   }, [loading]);
+
+  const calcCGPA = useCallback(() => {
+    let sum = 0, sem = 0;
+    if (userData?.studentProfile?.SGPA?.sem1 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem1);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem2 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem2);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem3 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem3);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem4 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem4);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem5 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem5);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem6 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem6);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem7 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem7);
+      sem += 1;
+    }
+    if (userData?.studentProfile?.SGPA?.sem8 !== '0' || 0) {
+      sum += Number(userData?.studentProfile?.SGPA?.sem8);
+      sem += 1;
+    }
+    setCgpa((sum / sem).toFixed(2));
+  }, [userData?.studentProfile?.SGPA]);
+
+  useEffect(() => {
+    calcCGPA();
+  }, [calcCGPA]);
 
   // console.log(userData)
 
@@ -92,46 +132,41 @@ function UpdatePlacementProfile() {
     }
   }
 
+  const handleDeleteResume = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${BASE_URL}/student/delete-resume`,
+        { userId: userData.id || userData._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+
+      setUserData({
+        ...userData,
+        studentProfile: {
+          ...userData.studentProfile,
+          resume: undefined,
+        }
+      });
+
+      if (response.data?.msg) {
+        setToastMessage(response.data.msg);
+        setShowToast(true);
+      }
+    } catch (error) {
+      const message = error?.response?.data?.msg || error?.message || 'Error deleting resume';
+      setToastMessage(message);
+      setShowToast(true);
+      console.error('Error deleting resume:', error);
+    }
+  }
+
   // console.log(userData);
 
   const [cgpa, setCgpa] = useState(0);
-
-  const calcCGPA = () => {
-    let sum = 0, sem = 0;
-    if (userData?.studentProfile?.SGPA?.sem1 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem1);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem2 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem2);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem3 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem3);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem4 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem4);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem5 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem5);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem6 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem6);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem7 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem7);
-      sem += 1;
-    }
-    if (userData?.studentProfile?.SGPA?.sem8 !== '0' || 0) {
-      sum += Number(userData?.studentProfile?.SGPA?.sem8);
-      sem += 1;
-    }
-    setCgpa((sum / sem).toFixed(2));
-  }
 
   return (
     <>
@@ -200,18 +235,29 @@ function UpdatePlacementProfile() {
                           <Image src={userData?.profile} thumbnail />
                         </Col>
                       </div>
-                      <div className="flex items-center">
+                      <div className="flex flex-col gap-3 w-full">
                         {/* resume upload  */}
                         <UploadResume fetchCurrentUserData={fetchCurrentUserData} /> {/* passing function to update userData */}
-                        {(userData?.studentProfile?.resume !== "undefined") && (
-                          <div className="py-2 px-2">
-                            <span className='bg-blue-500 py-1 pr-2 rounded cursor-pointer hover:bg-blue-700'>
-                              <a href={userData?.studentProfile?.resume} target='_blanck' className='no-underline text-white'>
-                                <i className="fa-regular fa-eye px-2" />
+                        {(userData?.studentProfile?.resume !== "undefined" && userData?.studentProfile?.resume) && (
+                          <div className="py-2 px-2 w-full rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                type="button"
+                                onClick={() => window.open(userData.studentProfile.resume, '_blank', 'noopener,noreferrer')}
+                              >
+                                <i className="fa-regular fa-eye me-2" />
                                 View Resume
-                              </a>
-                            </span>
-                            <p className='text-sm text-gray-500 mt-1'>{userData?.studentProfile?.resume?.filename}</p>
+                              </Button>
+                              <Button variant="danger" size="sm" type="button" onClick={handleDeleteResume}>
+                                <i className="fa-solid fa-xmark me-2"></i>
+                                Remove Resume
+                              </Button>
+                            </div>
+                            <p className='text-sm text-gray-500 mt-2 max-w-full overflow-hidden truncate'>
+                              {userData.studentProfile.resume.split('/').pop()}
+                            </p>
                           </div>
                         )}
                       </div>

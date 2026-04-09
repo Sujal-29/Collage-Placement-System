@@ -42,10 +42,11 @@ const UploadResume = async (req, res) => {
     const originalName = path.parse(req.file.originalname).name;
     const uniqueFilename = `${originalName}_${Date.now()}_${req.body.userId}`;
 
-    // Upload the new resume
+    // Upload the new resume as raw file
     const cloudinaryResponse = await cloudinary.uploader.upload(req.file.path, {
       folder: "CPMS/Resume",
       public_id: uniqueFilename,
+      resource_type: "raw",
     });
 
     // Update resume path in MongoDB
@@ -60,4 +61,31 @@ const UploadResume = async (req, res) => {
   }
 };
 
-module.exports = UploadResume;
+const DeleteResume = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ msg: "userId required" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ msg: "Student not found!" });
+
+    if (!user.studentProfile.resume) {
+      return res.status(400).json({ msg: "No resume available to delete." });
+    }
+
+    const oldResumeUrl = user.studentProfile.resume;
+    const oldResumeFileName = oldResumeUrl.substring(oldResumeUrl.lastIndexOf("/") + 1).split(".")[0];
+    const oldResumePublicId = `CPMS/Resume/${oldResumeFileName}`;
+    await cloudinary.uploader.destroy(oldResumePublicId, { resource_type: "raw" });
+
+    user.studentProfile.resume = undefined;
+    await user.save();
+
+    return res.status(200).json({ msg: "Resume deleted successfully." });
+  } catch (error) {
+    console.error('resume delete error:', error);
+    return res.status(500).json({ msg: "Server error", error: error.message || String(error) });
+  }
+};
+
+module.exports = { UploadResume, DeleteResume };

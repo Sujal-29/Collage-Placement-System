@@ -157,7 +157,7 @@ function UserDetails() {
 
       try {
         const response = await axios.post(`${BASE_URL}/user/upload-photo`, formData);
-        setUserData({ ...userData, profile: response.data.file });
+        setUserData({ ...userData, profile: response.data.url });
         if (response.data) {
           if (response.data.msg) {
             setToastMessage(response.data.msg);
@@ -165,10 +165,29 @@ function UserDetails() {
           }
         }
       } catch (error) {
-        setToastMessage(error.msg);
+        const message = error?.response?.data?.msg || error?.message || 'Error uploading photo';
+        setToastMessage(message);
         setShowToast(true);
         console.error('Error uploading photo:', error);
       }
+    }
+  }
+
+  const handleDeletePhoto = async () => {
+    try {
+      const response = await axios.post(`${BASE_URL}/user/delete-photo`, {
+        userId: userData._id
+      });
+      setUserData({ ...userData, profile: response.data.url });
+      if (response.data?.msg) {
+        setToastMessage(response.data.msg);
+        setShowToast(true);
+      }
+    } catch (error) {
+      const message = error?.response?.data?.msg || error?.message || 'Error deleting photo';
+      setToastMessage(message);
+      setShowToast(true);
+      console.error('Error deleting photo:', error);
     }
   }
 
@@ -372,6 +391,15 @@ function UserDetails() {
                           disabled={!completeProfileReq && currentUserData.role !== 'superuser'}
                         />
                       </FloatingLabel>
+                      <Button 
+                        variant="danger" 
+                        size="sm"
+                        onClick={handleDeletePhoto}
+                        disabled={userData?.profile === "https://res.cloudinary.com/dgu6xwnzx/image/upload/v1743159225/defaultProfileImg_cmmurk.jpg" || (!completeProfileReq && currentUserData.role !== 'superuser')}
+                      >
+                        <i className="fa-solid fa-trash me-2"></i>
+                        Remove Picture
+                      </Button>
                     </div>
                   </div>
                 </div>
